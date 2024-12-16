@@ -7,6 +7,7 @@ export default function Main() {
   const [cakes, setCakes] = useState([]);
   const [searchValue, setSearchValue] = useState();
   const [suggests, setSuggests] = useState();
+  const [loading, setLoading] = useState(false);
 
   const handleChange = useCallback((e, data) => {
     const mock = [
@@ -28,6 +29,7 @@ export default function Main() {
   }, []);
 
   const getCakeList = () => {
+    setLoading(true);
     return fetch('https://the-birthday-cake-db.p.rapidapi.com/', {
       method: 'GET',
       headers: {
@@ -35,8 +37,12 @@ export default function Main() {
         'x-rapidapi-host': 'the-birthday-cake-db.p.rapidapi.com'
       }
     })
-      .then(response => response.json()).then(json => {setCakes(json)})
+      .then(response => response.json()).then(json => {
+        setLoading(false);
+        setCakes(json)
+      })
       .catch(err => {
+        setLoading(false);
         console.log(err);
       });
   }
@@ -66,12 +72,12 @@ export default function Main() {
         prefix={<Search16 />}
         suggests={suggests}
         value={searchValue}
-        placeholder='Search by name'
+        placeholder='Search by title'
         onChange={handleChange}
         onSelect={handleSelect}
       />
       <Table data={searchValue ? search : cakes} size='m' marginTop='s5' onSort={onSort} noHeader={!cakes.length}>
-        <Table.Column id='id' title='#'>
+        <Table.Column className="table-cell" id='id' title='#'>
           {(cake) => cake.id}
         </Table.Column>
         <Table.Column id='title' title='Title' sortable>
@@ -85,7 +91,11 @@ export default function Main() {
             <img className="img-wrapper" src={cake.image} alt={cake.title} />
           )}
         </Table.Column>
-        {!cakes.length && (<EmptyState>
+        {loading && (<EmptyState loading>
+          <EmptyState.Title>Загружаем данные</EmptyState.Title>
+          <EmptyState.Description>Мы загружаем данные таблицы, очень скоро они будут готовы.</EmptyState.Description>
+        </EmptyState>)}
+        {!cakes.length && !loading && (<EmptyState>
           <RoundIcon color="nice10">
             <CloseCancelX />
           </RoundIcon>
